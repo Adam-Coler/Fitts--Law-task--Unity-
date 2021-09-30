@@ -14,17 +14,20 @@ namespace TiltFitts
         public delegate void OnTargetExit();
         public static event OnTargetExit onTargetExit;
 
+        public delegate void OnTargetEnter();
+        public static event OnTargetEnter onTargetEnter;
+
         private GameObject player;
 
-        public bool isNext
+        public bool isActive
         {
             get
             {
-                return _isNext;
+                return _isActive;
             }
             set
             {
-                _isNext = value;
+                _isActive = value;
 
                 if (value)
                 {
@@ -34,7 +37,7 @@ namespace TiltFitts
             }
         }
 
-        private bool _isNext = false;
+        private bool _isActive = false;
 
         private Material baseMat;
         private Renderer renderer;
@@ -49,30 +52,35 @@ namespace TiltFitts
             baseMat = renderer.material;
         }
 
+        private void OnTriggerEnter(Collider other)
+        {
+            if (isActive)
+            {
+                 onTargetEnter();
+            }
+        }
+
         private void OnTriggerExit(Collider other)
         {
-            if (isNext) {
+            if (isActive)
+            {
                 onTargetExit();
             }
         }
 
-
-        /// <summary>
-        /// fix dist
-        /// record it
-        /// add clamps
-        /// .25, .75, .5
-        /// </summary>
+        private float smallestDist = 999f;
         private void Update()
         {
-            if (isNext)
+            if (isActive)
             {
-                Vector3 levelWithPlayer = transform.position + player.transform.localScale.x / 2 * Vector3.up;
+                Vector3 levelWithPlayer = transform.position + player.transform.localScale.y / 2 * Vector3.up;
                 float distance = Vector3.Distance(levelWithPlayer, player.transform.position);
 
-                Debug.LogError(distance);
-
-                renderer.material.color = Color.Lerp(Color.green, Color.red, distance);
+                if (distance < smallestDist)
+                {
+                    renderer.material.color = Color.Lerp(Color.green, Color.red, distance);
+                    smallestDist = distance;
+                }
             }
         }
 
